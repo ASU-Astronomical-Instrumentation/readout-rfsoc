@@ -55,17 +55,17 @@ def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, da
         dst_ip_int32=int("c0a80328", 16),
         src_mac0_int32=int("eec0ffee", 16), # TODO: Remove
         src_mac1_int16=int("c0ff", 16), # TODO: Remove
-        dst_mac0_int16=int("00F2", 16),
-        dst_mac1_int32=int("3CECEFBB", 16),
+        dst_mac0_int16=int("AABB", 16),
+        dst_mac1_int32=int("CCDDEEFF", 16),
         port=4096
     ):  # f
 
-        eth_regs.write(ethRegMap['srcip'], int(ipaddress.IPv4Address(
-                       src_ip_int32
-                   )))
-        eth_regs.write(ethRegMap['dstip'], int(ipaddress.IPv4Address(
-                            dst_ip_int32
-                        )))
+        eth_regs.write(ethRegMap['srcip'],
+                        src_ip_int32
+                   )
+        eth_regs.write(ethRegMap['dstip'],
+                        dst_ip_int32
+                        )
         eth_regs.write(ethRegMap['dstmacmsb'],
                         dst_mac0_int16
                         ) 
@@ -82,16 +82,16 @@ def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, da
         firmware.ethWrapPort0.EthernetControl_0,
         src_ip_int32=dataA_srcip,
         dst_ip_int32=dataA_dstip,
-        dst_mac1_int32=dstmac_a_msb,
-        dst_mac0_int16=dstmac_a_lsb,
+        dst_mac1_int32=dstmac_a_lsb,
+        dst_mac0_int16=dstmac_a_msb,
         port=portA
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
         firmware.ethWrapPort1.EthernetControl_0,
         src_ip_int32=dataB_srcip,
         dst_ip_int32=dataB_dstip,
-        dst_mac1_int32=dstmac_b_msb,
-        dst_mac0_int16=dstmac_b_lsb,
+        dst_mac1_int32=dstmac_b_lsb,
+        dst_mac0_int16=dstmac_b_msb,
         port=portB
     )  # OPSERO PORT 2, CHAN 2
 
