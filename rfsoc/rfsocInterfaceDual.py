@@ -1,3 +1,4 @@
+import ipaddress
 import logging
 
 log = logging.getLogger(__name__)
@@ -36,26 +37,49 @@ def uploadOverlay(overlayPath: str):
 
 def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, dataB_dstip: int, dstmac_a_msb: int,
                         dstmac_a_lsb: int,dstmac_b_msb: int,dstmac_b_lsb: int, portA: int, portB: int):
+    
+    # Configure Ethernetm Reg Map
+    ethRegMap={
+        "srcip": 0x10,
+        "dstip": 0x18,
+        "dstmaclsb": 0x20,
+        "dstmacmsb": 0x24,
+        "ports": 0x2c,
+        "timemsb": 0x34, # Not Implemented
+        "timelsb": 0x38  # Not Implemented
+    }
     # SET ETHERNET IPS and MACS
     def ethRegsPortWrite(
         eth_regs,
         src_ip_int32=int("c0a80335", 16),
         dst_ip_int32=int("c0a80328", 16),
-        src_mac0_int32=int("eec0ffee", 16),
-        src_mac1_int16=int("c0ff", 16),
+        src_mac0_int32=int("eec0ffee", 16), # TODO: Remove
+        src_mac1_int16=int("c0ff", 16), # TODO: Remove
         dst_mac0_int16=int("00F2", 16),
         dst_mac1_int32=int("3CECEFBB", 16),
         port=4096
     ):  # f
-        eth_regs.write(0x00, src_mac0_int32)
-        eth_regs.write(0x04, (dst_mac0_int16 << 16) + src_mac1_int16)
-        eth_regs.write(0x08, dst_mac1_int32)
-        eth_regs.write(0x0C, src_ip_int32)
-        eth_regs.write(0x10, dst_ip_int32)
-        eth_regs.write(0x14, (port<<16) | port)
+
+        eth_regs.write(ethRegMap['srcip'], int(ipaddress.IPv4Address(
+                       src_ip_int32
+                   )))
+        eth_regs.write(ethRegMap['dstip'], int(ipaddress.IPv4Address(
+                            dst_ip_int32
+                        )))
+        eth_regs.write(ethRegMap['dstmacmsb'],
+                        dst_mac0_int16
+                        ) 
+        eth_regs.write(ethRegMap['dstmaclsb'],
+                        dst_mac1_int32
+                        ) 
+
+        sourceport = port
+        destport = port
+        eth_regs.write(ethRegMap['ports'],
+                        (destport<<16)|sourceport) 
 
     ethRegsPortWrite(
-        firmware.ethWrapPort0.eth_regs_0,
+        firmware.ethWrapPort0.EthernetControl_0,
         src_ip_int32=dataA_srcip,
         dst_ip_int32=dataA_dstip,
         dst_mac1_int32=dstmac_a_msb,
@@ -63,7 +87,7 @@ def configure_registers(dataA_srcip: int, dataB_srcip: int, dataA_dstip: int, da
         port=portA
     )  # OPSERO PORT 3, CHAN 1
     ethRegsPortWrite(
-        firmware.ethWrapPort1.eth_regs_0,
+        firmware.ethWrapPort1.EthernetControl_0,
         src_ip_int32=dataB_srcip,
         dst_ip_int32=dataB_dstip,
         dst_mac1_int32=dstmac_b_msb,
@@ -136,10 +160,10 @@ def load_bin_list(chan, freq_list):
 def reset_accum_and_sync(chan, freqs):
     if chan == 1:
         dsp_regs = firmware.chan1.dsp_regs_0
-        dsp_regs.write(0x0C, 181)
+        dsp_regs.write(0x0C, 182)
     elif chan == 2:
         dsp_regs = firmware.chan2.dsp_regs_0
-        dsp_regs.write(0x0C, 181)
+        dsp_regs.write(0x0C, 182)
     else:
         return "Does not compute"
 
@@ -147,11 +171,8 @@ def reset_accum_and_sync(chan, freqs):
     accum_rst = 2**24  # (active rising edge)
     accum_length = (2**19) - 1  # (2**19)-1 # (2**18)-1
 
-    fft_shift = 0
-    if len(freqs) < 400:
-        fft_shift = 511  # 2**9-1
-    else:
-        fft_shift = (2**9) - 1
+    fft_shift = 511
+    
     dsp_regs.write(0x00, fft_shift)  # set fft shift
     dsp_regs.write(0x08, accum_length | sync_in)
     sleep(0.5)
