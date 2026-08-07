@@ -1,0 +1,23 @@
+[Unit]
+Description=RFSoC Redis Control Daemon
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/path/to/your/project
+ExecStart=/usr/bin/python3 /path/to/your/project/redisControl.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+# Prevent systemd from killing the process on SIGHUP (allows graceful reload if needed later)
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
