@@ -1,8 +1,8 @@
 """
 @author: Cody Roberson
-@date: Apr 2025
+@date: Jan 15, 2026
 @file: redisControl.py
-@version: 0.2.8
+@version: 
 @description:
     This file is the main control loop for the rfsoc. It listens for commands from the redis server and executes them.
     A dictionary is used to map commands to functions in order to create a dispatch table".
@@ -20,7 +20,7 @@ from logging.handlers import RotatingFileHandler
 import os
 import traceback
 __LOGFMT = "%(asctime)s|%(levelname)s|%(filename)s|%(lineno)d|%(funcName)s|   %(message)s"
-logging.basicConfig(format=__LOGFMT, level=logging.DEBUG)
+logging.basicConfig(format=__LOGFMT, level=logging.INFO)
 log = logging.getLogger(__name__)
 logh = RotatingFileHandler("/var/log/kidpyControl.log", mode = 'a', maxBytes=20_971_520, backupCount=10)
 log.addHandler(logh)
